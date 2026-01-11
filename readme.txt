@@ -50,6 +50,14 @@ RAW JSON:
     "qty": 3
 }
 
+
+http://localhost:3000/users
+metode Delete 
+Body
+{
+id:1 atau ada berapa id yang terdaftar
+}
+
 Telah support pengurangan stock jika terjadi transaksi
 Mengakses Users hanya bisa jika memiliki TOKEN_DARI_LOGIN
 Tertera jam transaksi detail
