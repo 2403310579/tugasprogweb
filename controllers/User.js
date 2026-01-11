@@ -21,7 +21,7 @@ export const Register = async (req, res) => {
     if (password !== confPassword) return res.status(400).json({ msg: "Password tidak cocok" });
 
     try {
-        // 2. CEK APAKAH EMAIL SUDAH TERDAFTAR (Penting!)
+        // 2. CEK APAKAH EMAIL SUDAH TERDAFTAR 
         const userExists = await Users.findOne({ where: { email: email } });
         if (userExists) return res.status(400).json({ msg: "Email sudah terdaftar, gunakan email lain" });
 
