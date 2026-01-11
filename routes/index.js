@@ -6,7 +6,7 @@ import { getTransaksi, createTransaksi, updateTransaksi, deleteTransaksi } from 
 
 const router = express.Router();
 
-router.get('/users', /*verifytoken*/ getUsers);
+router.get('/users', verifytoken,getUsers);
 router.post(`/register`, Register);
 router.post('/login', Login);
 router.put('/update', forgot);

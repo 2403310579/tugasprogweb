@@ -2,7 +2,9 @@ import Product from "../models/ProdukModel.js";
 
 export const getProduk = async (req, res) => {
   try {
-    const data = await Product.findAll();
+    const data = await Product.findAll({
+        attributes:['id', 'name', 'price', 'stock']
+    });
     res.json(data);
   } catch (error) {
     res.status(500).json({ msg: "Gagal mengambil data produk" });
@@ -23,7 +25,7 @@ export const createProduct = async (req, res) => {
     if (isNaN(stock) || stock < 0)
       return res.status(400).json({ msg: "Stok tidak boleh negatif" });
 
-    // 1. Cari apakah produk dengan nama yang sama sudah ada
+    // 1. Cari apakah produk denga nnama yang sama sudah ada
     const existingProduct = await Product.findOne({
       where: { name: name },
     });
@@ -57,12 +59,35 @@ export const updateProduct = async (req, res) => {
   try {
     const { id, name, price, stock } = req.body;
 
-    // Cek apakah produk ada
+    // 1. Validasi keberadaan ID
+    if (!id) return res.status(400).json({ msg: "ID produk diperlukan" });
+
+    // 2. Cari produk berdasarkan ID untuk mengambil data lama
     const produk = await Product.findByPk(id);
     if (!produk) return res.status(404).json({ msg: "Produk tidak ditemukan" });
 
-    await Product.update({ name, price, stock }, { where: { id } });
-    res.json({ message: "Produk berhasil diupdate" });
+    // 3. Logika Penambahan Stok:
+    // Ambil stok lama dari database, tambahkan dengan input stok baru
+    // Gunakan parseInt untuk memastikan operasi matematika, bukan penggabungan teks
+    const stokBaru = produk.stock + (parseInt(stock) || 0);
+
+    // 4. Jalankan Update
+    await Product.update(
+      {
+        name: name || produk.name, // Jika nama tidak diisi, gunakan nama lama
+        price: price || produk.price, // Jika harga tidak diisi, gunakan harga lama
+        stock: stokBaru, // Gunakan hasil penjumlahan stok
+      },
+      { where: { id } }
+    );
+
+    res.json({
+      message: "Stok produk berhasil ditambahkan",
+      nama_produk: produk.name,
+      stok_sebelumnya: produk.stock,
+      tambahan: stock,
+      stok_sekarang: stokBaru,
+    });
   } catch (error) {
     res.status(500).json({ msg: "Gagal mengupdate produk" });
   }
