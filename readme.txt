@@ -1,3 +1,10 @@
+Fitur Utama
+Autentikasi JWT: Login aman menggunakan Access Token dan Refresh Token.
+Manajemen Stok Pintar: Menambah produk dengan nama yang sama akan otomatis mengupdate stok pada ID yang sudah ada, bukan membuat ID baru.
+Transaksi Terintegrasi: Setiap transaksi secara otomatis memvalidasi ketersediaan stok, menghitung total harga, dan mengurangi stok produk.
+Eager Loading: Menampilkan detail nama pembeli (User) dan nama barang (Produk) dalam setiap riwayat transaksi.
+
+
 REGISTER
 POST http://localhost:3000/register
 RAW JSON:
@@ -57,6 +64,19 @@ Body
 {
 id:1 atau ada berapa id yang terdaftar
 }
+
+//relasi antara produk dan transaksi
+Produk.hasMany(Transaksi, { foreignKey: "product_id" });
+Products memiliki banyak Transactions (product_id).
+Transaksi.belongsTo(Produk, { foreignKey: "product_id" });
+
+//relasi antara user dan transaksi
+Users.hasMany(Transaksi, { foreignKey: "user_id" });
+Users memiliki banyak Transactions (user_id).
+
+Transaksi.belongsTo(Users, { foreignKey: "user_id" });
+Transactions terhubung ke satu User dan satu Product.
+
 
 Telah support pengurangan stock jika terjadi transaksi
 Mengakses Users hanya bisa jika memiliki TOKEN_DARI_LOGIN
