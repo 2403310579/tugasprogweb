@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 
 export const getUsers = async (req,res) => {
     try {
-        const users = await Users.findAll();
+        const users = await Users.findAll({
+          attributes: ['id', 'name', 'email']
+        });
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -13,28 +15,35 @@ export const getUsers = async (req,res) => {
 };
 
 export const Register = async (req, res) => {
-    const { name ,email, password, confPassword} = req.body;
-    if (password !== confPassword)
-        return res
-            .status(400)
-            .json({ msg: `Password dan Confirm Password tidak cocok`});
-    const salt = await bcrypt.genSalt();
-    const hashPassword = await bcrypt.hash(password, salt);
+    const { name, email, password, confPassword } = req.body;
+    
+    // 1. Validasi kecocokan password
+    if (password !== confPassword) return res.status(400).json({ msg: "Password tidak cocok" });
+
     try {
+        // 2. CEK APAKAH EMAIL SUDAH TERDAFTAR (Penting!)
+        const userExists = await Users.findOne({ where: { email: email } });
+        if (userExists) return res.status(400).json({ msg: "Email sudah terdaftar, gunakan email lain" });
+
+        const salt = await bcrypt.genSalt();
+        const hashPassword = await bcrypt.hash(password, salt);
+
         await Users.create({
             name: name,
             email: email,
             password: hashPassword,
         });
-        res.json({ smg: 'Register Berhasil'})
-    } catch (error){
+        res.json({ msg: 'Register Berhasil' });
+    } catch (error) {
         console.log(error);
+        res.status(500).json({ msg: "Terjadi kesalahan pada server" });
     }
-
+    
 };
 
 export const Login = async (req, res) => {
     try{
+      // Cari user berdasarkan email
         const user = await Users.findOne({
             where: {
                 email: req.body.email,
@@ -50,6 +59,7 @@ export const Login = async (req, res) => {
         const refreshToken = jwt.sign({userId, name}, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: '1s'
         });
+        // Simpan refreshToken ke database
         await Users.update(
             { refreshToken: refreshToken },
             {
@@ -61,13 +71,14 @@ export const Login = async (req, res) => {
         res.cookie('refreshToken', refreshToken,{
             httpOnly: true,
             maxAge: 24 * 60 * 80 * 1000,
-        });
+        });//cookie disimpan di browser
         res.json({ accessToken});
     } catch (error) {
         res.status(404).json({ msg: "User Tidak ditemukan"});
     }
 };
 
+//forgot password
 export const forgot = async (req, res) => {
   const { id, name ,email, password, confPassword} = req.body;
   if (password !== confPassword)
